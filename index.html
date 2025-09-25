@@ -1,434 +1,100 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Simulador de Oleaje Submarino</title>
     <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
     <script id="MathJax-script" async
         src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
     </script>
-    <title>Simulador de Oleaje Submarino</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Arial', sans-serif;
-            background: linear-gradient(135deg, #001f3f, #0074D9, #7FDBFF);
-            min-height: 100vh;
-            color: white;
-            overflow-x: hidden;
-        }
-
-        .container {
-            display: flex;
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 20px;
-            gap: 30px;
-        }
-
-        .simulator-section {
-            flex: 2;
-            background: rgba(0, 31, 63, 0.3);
-            border-radius: 20px;
-            padding: 30px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(127, 219, 255, 0.2);
-        }
-
-        .controls-section {
-            flex: 1;
-            background: rgba(0, 116, 217, 0.2);
-            border-radius: 20px;
-            padding: 30px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(127, 219, 255, 0.3);
-            height: fit-content;
-        }
-
-        h1 {
-            text-align: center;
-            margin-bottom: 30px;
-            font-size: 2.5rem;
-            background: linear-gradient(45deg, #7FDBFF, #39CCCC);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            text-shadow: 0 2px 10px rgba(127, 219, 255, 0.3);
-        }
-
-        h2 {
-            color: #7FDBFF;
-            margin-bottom: 20px;
-            font-size: 1.3rem;
-            text-align: center;
-        }
-
-        /* Canvas de simulación */
-        #waveCanvas {
-            width: 100%;
-            height: 400px;
-            background: linear-gradient(180deg, #001a33, #003d66, #0066cc);
-            border-radius: 15px;
-            box-shadow:
-                0 10px 30px rgba(0, 0, 0, 0.3),
-                inset 0 1px 0 rgba(255, 255, 255, 0.1);
-            border: 2px solid rgba(127, 219, 255, 0.2);
-        }
-
-        /* Controles */
-        .control-group {
-            margin-bottom: 25px;
-            background: rgba(0, 31, 63, 0.4);
-            padding: 20px;
-            border-radius: 12px;
-            border: 1px solid rgba(127, 219, 255, 0.1);
-        }
-
-        .control-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: bold;
-            color: #7FDBFF;
-            font-size: 0.95rem;
-        }
-
-        .slider-container {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .slider {
-            flex: 1;
-            height: 8px;
-            border-radius: 5px;
-            background: linear-gradient(to right, #003d66, #0074D9);
-            outline: none;
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-
-        .slider::-webkit-slider-thumb {
-            appearance: none;
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            background: linear-gradient(45deg, #7FDBFF, #39CCCC);
-            cursor: pointer;
-            box-shadow: 0 2px 10px rgba(127, 219, 255, 0.5);
-            transition: all 0.3s ease;
-        }
-
-        .slider::-webkit-slider-thumb:hover {
-            transform: scale(1.2);
-            box-shadow: 0 4px 15px rgba(127, 219, 255, 0.8);
-        }
-
-        .value-display {
-            min-width: 80px;
-            text-align: center;
-            background: rgba(127, 219, 255, 0.1);
-            padding: 8px 12px;
-            border-radius: 8px;
-            font-weight: bold;
-            color: #7FDBFF;
-            border: 1px solid rgba(127, 219, 255, 0.3);
-        }
-
-        /* Panel de energía */
-        .energy-panel {
-            background: linear-gradient(135deg, rgba(57, 204, 204, 0.2), rgba(127, 219, 255, 0.2));
-            padding: 25px;
-            border-radius: 15px;
-            text-align: center;
-            margin-top: 30px;
-            border: 2px solid rgba(57, 204, 204, 0.4);
-            box-shadow: 0 5px 20px rgba(57, 204, 204, 0.2);
-        }
-
-        .energy-panel h3 {
-            color: #39CCCC;
-            margin-bottom: 15px;
-            font-size: 1.2rem;
-        }
-
-        .energy-value {
-            font-size: 2.5rem;
-            font-weight: bold;
-            color: #7FDBFF;
-            text-shadow: 0 2px 10px rgba(127, 219, 255, 0.5);
-            margin-bottom: 10px;
-        }
-
-        .energy-unit {
-            font-size: 1.1rem;
-            color: #39CCCC;
-            opacity: 0.8;
-        }
-
-        /* Medidor Arpón */
-        .harpoon-meter {
-            background: linear-gradient(135deg, rgba(0, 31, 63, 0.8), rgba(0, 116, 217, 0.3));
-            padding: 25px;
-            border-radius: 15px;
-            text-align: center;
-            margin-top: 25px;
-            border: 2px solid rgba(127, 219, 255, 0.3);
-            box-shadow: 0 5px 20px rgba(0, 116, 217, 0.3);
-        }
-
-        .harpoon-meter h3 {
-            color: #7FDBFF;
-            margin-bottom: 20px;
-            font-size: 1.2rem;
-        }
-
-        .harpoon-container {
-            position: relative;
-            width: 100%;
-            height: 80px;
-            background: rgba(0, 31, 63, 0.6);
-            border-radius: 40px;
-            margin: 20px 0;
-            border: 2px solid rgba(127, 219, 255, 0.2);
-            overflow: hidden;
-        }
-
-        .harpoon-scale {
-            display: flex;
-            justify-content: space-between;
-            position: absolute;
-            top: -25px;
-            left: 10px;
-            right: 10px;
-            font-size: 0.8rem;
-            color: #39CCCC;
-        }
-
-        .scale-mark {
-            position: relative;
-        }
-
-        .scale-mark::after {
-            content: '';
-            position: absolute;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 2px;
-            height: 10px;
-            background: rgba(127, 219, 255, 0.5);
-        }
-
-        .harpoon-track {
-            position: relative;
-            width: 100%;
-            height: 100%;
-            border-radius: 40px;
-            overflow: hidden;
-        }
-
-        .harpoon-needle {
-            position: absolute;
-            top: 50%;
-            left: 10px;
-            transform: translateY(-50%);
-            width: 60px;
-            height: 8px;
-            transition: left 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-            z-index: 3;
-        }
-
-        .harpoon-tip {
-            position: absolute;
-            left: 0;
-            top: 50%;
-            transform: translateY(-50%);
-            font-size: 20px;
-            color: #7FDBFF;
-            text-shadow: 0 0 10px rgba(127, 219, 255, 0.8);
-            filter: drop-shadow(0 0 5px rgba(127, 219, 255, 0.6));
-        }
-
-        .harpoon-shaft {
-            position: absolute;
-            left: 18px;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 40px;
-            height: 4px;
-            background: linear-gradient(90deg, #7FDBFF, #39CCCC);
-            border-radius: 2px;
-            box-shadow: 0 0 8px rgba(127, 219, 255, 0.6);
-        }
-
-        .harpoon-glow {
-            position: absolute;
-            top: 0;
-            left: 0;
-            height: 100%;
-            width: 0%;
-            background: linear-gradient(90deg,
-                    rgba(127, 219, 255, 0.3),
-                    rgba(57, 204, 204, 0.2),
-                    rgba(0, 116, 217, 0.1));
-            border-radius: 40px;
-            transition: width 0.8s ease;
-            z-index: 1;
-        }
-
-        .power-level {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 15px;
-            padding: 10px 15px;
-            background: rgba(0, 31, 63, 0.4);
-            border-radius: 8px;
-            border: 1px solid rgba(127, 219, 255, 0.2);
-        }
-
-        .power-label {
-            color: #39CCCC;
-            font-size: 0.9rem;
-        }
-
-        .power-value {
-            color: #7FDBFF;
-            font-weight: bold;
-            font-size: 1rem;
-            text-shadow: 0 2px 5px rgba(127, 219, 255, 0.3);
-        }
-
-        /* Fórmula */
-        .formula-display {
-            background: rgba(0, 31, 63, 0.6);
-            padding: 20px;
-            border-radius: 12px;
-            margin-top: 25px;
-            font-family: 'Courier New', monospace;
-            border: 1px solid rgba(127, 219, 255, 0.2);
-        }
-
-        .formula-display h4 {
-            color: #7FDBFF;
-            margin-bottom: 10px;
-            font-size: 1rem;
-        }
-
-        .formula {
-            color: #39CCCC;
-            font-size: 0.9rem;
-            line-height: 1.6;
-        }
-
-        /* Información adicional */
-        .info-panel {
-            background: rgba(0, 31, 63, 0.4);
-            padding: 20px;
-            border-radius: 12px;
-            margin-top: 25px;
-            border: 1px solid rgba(127, 219, 255, 0.1);
-        }
-
-        .info-panel h4 {
-            color: #7FDBFF;
-            margin-bottom: 15px;
-            font-size: 1rem;
-        }
-
-        .info-item {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 8px;
-            font-size: 0.9rem;
-        }
-
-        .info-label {
-            color: #39CCCC;
-        }
-
-        .info-value {
-            color: #7FDBFF;
-            font-weight: bold;
-        }
-
-        /* Efectos hover */
-        .control-group:hover {
-            background: rgba(0, 31, 63, 0.6);
-            transform: translateY(-2px);
-            transition: all 0.3s ease;
-        }
-
-        /* Animación de vibración para el arpón */
-        @keyframes harpoonVibrate {
-
-            0%,
-            100% {
-                transform: translateY(-50%) translateX(0);
-            }
-
-            25% {
-                transform: translateY(-50%) translateX(-1px);
-            }
-
-            75% {
-                transform: translateY(-50%) translateX(1px);
-            }
-        }
-
-        /* Responsivo */
-        @media (max-width: 1024px) {
-            .container {
-                flex-direction: column;
-                gap: 20px;
-            }
-
-            h1 {
-                font-size: 2rem;
-            }
-
-            #waveCanvas {
-                height: 300px;
-            }
-
-            .harpoon-container {
-                height: 60px;
-            }
-
-            .harpoon-needle {
-                width: 45px;
-            }
-
-            .harpoon-tip {
-                font-size: 16px;
-            }
-
-            .harpoon-shaft {
-                width: 30px;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="style.css" />
 </head>
-
 <body>
     <div class="container">
         <!-- Sección del Simulador -->
         <div class="simulator-section">
             <h1>🌊 Simulador de Oleaje Submarino</h1>
-            <canvas id="waveCanvas"></canvas>
+            <div class="simulator-stage">
+
+                <!-- Canvas -->
+                <canvas id="waveCanvas"></canvas>
+
+                <!-- Dashboard mini -->
+                <div class="mini-dashboard" id="miniDashboard" data-collapsed="false">
+                    <div class="mini-header" id="miniHeader">
+                        <span class="mini-title">↯ Monitoreo</span>
+                        <button class="mini-toggle" id="miniToggle" aria-label="Plegar / Expandir">−</button>
+                    </div>
+
+                    <div class="mini-content" id="miniContent">
+                        <div class="mini-block">
+                            <label>Energía (W)</label>
+                            <div class="value-large" id="energyValue">0</div>
+                        </div>
+
+                        <div class="mini-block">
+                            <label>Potencia (%)</label>
+                            <div class="mini-meter">
+                                <div class="mini-meter-fill" id="harpoonGlow"></div>
+                                <div class="mini-needle" id="harpoonNeedle">
+                                    <span class="mini-needle-head">▲</span>
+                                </div>
+                            </div>
+                            <div class="mini-row">
+                                <span>Nivel:</span>
+                                <span id="powerLevel" class="tag">Bajo</span>
+                            </div>
+                        </div>
+
+                        <div class="mini-block">
+                            <label>Faro (kW)</label>
+                            <div class="mini-meter slim">
+                                <div class="mini-meter-fill alt" id="lighthousePowerFill"></div>
+                            </div>
+                            <div class="mini-row">
+                                <span>Salida:</span>
+                                <span id="lighthousePowerNumeric" class="mono">0.00</span>
+                            </div>
+                            <div class="mini-row">
+                                <span>Haz:</span>
+                                <span id="beamIntensityLabel" class="tag small">Baja</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FARO -->
+                <div class="lighthouse-container" id="lighthouseContainer">
+                    <div class="lighthouse">
+                        <div class="lighthouse-base"></div>
+                        <div class="lighthouse-tower">
+                            <div class="tower-stripe stripe1"></div>
+                            <div class="tower-stripe stripe2"></div>
+                            <div class="tower-stripe stripe3"></div>
+                        </div>
+                        <div class="lighthouse-top">
+                            <div class="light-room">
+                                <div class="light-core" id="lightCore"></div>
+                                <div class="beam-wrapper" id="beamWrapper">
+                                    <div class="light-beam" id="lightBeam"></div>
+                                </div>
+                            </div>
+                            <div class="roof"></div>
+                        </div>
+                    </div>
+                    <div class="rocks"></div>
+                </div>
+
+               
+
+            </div>
         </div>
 
-        <!-- Panel de Controles -->
+        <!-- Panel lateral -->
         <div class="controls-section">
             <h2> Controles de Simulación</h2>
 
-            <!-- Control de Amplitud -->
             <div class="control-group">
                 <label for="amplitudeSlider"> Amplitud del Oleaje (m)</label>
                 <div class="slider-container">
@@ -437,7 +103,6 @@
                 </div>
             </div>
 
-            <!-- Control de Frecuencia -->
             <div class="control-group">
                 <label for="frequencySlider"> Frecuencia (Hz)</label>
                 <div class="slider-container">
@@ -446,7 +111,6 @@
                 </div>
             </div>
 
-            <!-- Control de Velocidad -->
             <div class="control-group">
                 <label for="speedSlider"> Velocidad (m/s)</label>
                 <div class="slider-container">
@@ -455,51 +119,17 @@
                 </div>
             </div>
 
-            <!-- Panel de Energía -->
-            <div class="energy-panel">
-                <h3>Energía Generada</h3>
-                <div id="energyValue" class="energy-value">1,920</div>
-                <div class="energy-unit">Vatios (W)</div>
-            </div>
-
-
-            <div class="harpoon-meter">
-                <h3>Medidor de Potencia</h3>
-                <div class="harpoon-container">
-                    <div class="harpoon-scale">
-                        <div class="scale-mark" data-value="0">0</div>
-                        <div class="scale-mark" data-value="25">25%</div>
-                        <div class="scale-mark" data-value="50">50%</div>
-                        <div class="scale-mark" data-value="75">75%</div>
-                        <div class="scale-mark" data-value="100">MAX</div>
-                    </div>
-                    <div class="harpoon-track">
-                        <div id="harpoonNeedle" class="harpoon-needle">
-                            <div class="harpoon-tip"></div>
-                            <div class="harpoon-shaft"></div>
-                        </div>
-                    </div>
-                    <div class="harpoon-glow" id="harpoonGlow"></div>
-                </div>
-                <div class="power-level">
-                    <span class="power-label">Nivel de Potencia:</span>
-                    <span id="powerLevel" class="power-value">Medio</span>
+            <div class="formula-display">
+                <h4>Fórmula de Energía Cinética</h4>
+                <div class="formula">
+                    \( E = \frac{1}{2} \, \rho \, A^2 \, f \, c \)<br>
+                    <small>
+                        ρ = 1000 kg/m³ (densidad del agua)<br>
+                        A = amplitud, f = frecuencia, c = velocidad
+                    </small>
                 </div>
             </div>
 
-             <div class="formula-display">
-        <h4>Fórmula de Energía Cinética</h4>
-        <div class="formula">
-            <!-- Fórmula en LaTeX -->
-            \( E = \frac{1}{2} \, \rho \, A^2 \, f \, c \)
-            <br>
-            <small>
-                ρ = 1000 kg/m³ (densidad del agua)<br>
-                A = amplitud, f = frecuencia, c = velocidad
-            </small>
-        </div>
-    </div>
- 
             <div class="info-panel">
                 <h4>Parámetros Actuales</h4>
                 <div class="info-item">
@@ -518,352 +148,6 @@
         </div>
     </div>
 
-    <script>
-        // Variables globales para el simulador
-        let canvas, ctx;
-        let animationId;
-        let time = 0;
-
-        // Parámetros del oleaje
-        let waveParams = {
-            amplitude: 2.0,    // Amplitud en metros
-            frequency: 0.8,    // Frecuencia en Hz
-            speed: 3.0,        // Velocidad en m/s
-            density: 1000      // Densidad del agua en kg/m³
-        };
-
-        // Configuración del canvas
-        const canvasConfig = {
-            width: 800,
-            height: 400,
-            waveCount: 3,      // Número de capas de olas
-            particleCount: 50  // Partículas flotantes
-        };
-
-        // Inicialización del simulador
-        function initSimulator() {
-            canvas = document.getElementById('waveCanvas');
-            ctx = canvas.getContext('2d');
-
-            // Configurar el tamaño del canvas
-            resizeCanvas();
-            window.addEventListener('resize', resizeCanvas);
-
-            // Inicializar controles
-            setupControls();
-
-            // Inicializar partículas
-            initParticles();
-
-            // Comenzar animación
-            animate();
-
-            // Calcular energía inicial
-            calculateEnergy();
-        }
-
-        // Redimensionar canvas
-        function resizeCanvas() {
-            const container = canvas.parentElement;
-            canvas.width = container.offsetWidth - 60; // Padding
-            canvas.height = 400;
-            canvasConfig.width = canvas.width;
-            canvasConfig.height = canvas.height;
-        }
-
-        // Configurar controles interactivos
-        function setupControls() {
-            const amplitudeSlider = document.getElementById('amplitudeSlider');
-            const frequencySlider = document.getElementById('frequencySlider');
-            const speedSlider = document.getElementById('speedSlider');
-
-            // Eventos de los sliders
-            amplitudeSlider.addEventListener('input', (e) => {
-                waveParams.amplitude = parseFloat(e.target.value);
-                document.getElementById('amplitudeValue').textContent = waveParams.amplitude.toFixed(1) + ' m';
-                calculateEnergy();
-            });
-
-            frequencySlider.addEventListener('input', (e) => {
-                waveParams.frequency = parseFloat(e.target.value);
-                document.getElementById('frequencyValue').textContent = waveParams.frequency.toFixed(1) + ' Hz';
-                calculateEnergy();
-            });
-
-            speedSlider.addEventListener('input', (e) => {
-                waveParams.speed = parseFloat(e.target.value);
-                document.getElementById('speedValue').textContent = waveParams.speed.toFixed(1) + ' m/s';
-                calculateEnergy();
-            });
-        }
-
-        // Partículas flotantes para efecto submarino
-        let particles = [];
-
-        function initParticles() {
-            particles = [];
-            for (let i = 0; i < canvasConfig.particleCount; i++) {
-                particles.push({
-                    x: Math.random() * canvasConfig.width,
-                    y: Math.random() * canvasConfig.height,
-                    size: Math.random() * 3 + 1,
-                    speedX: (Math.random() - 0.5) * 0.5,
-                    speedY: (Math.random() - 0.5) * 0.3,
-                    opacity: Math.random() * 0.5 + 0.2
-                });
-            }
-        }
-
-        // Función principal de animación
-        function animate() {
-            // Limpiar canvas
-            ctx.clearRect(0, 0, canvasConfig.width, canvasConfig.height);
-
-            // Fondo submarino con gradiente
-            drawBackground();
-
-            // Dibujar partículas flotantes
-            drawParticles();
-
-            // Dibujar múltiples capas de olas
-            drawWaveLayers();
-
-            // Dibujar información de profundidad
-            drawDepthInfo();
-
-            // Incrementar tiempo para animación
-            time += 0.02;
-
-            // Continuar animación
-            animationId = requestAnimationFrame(animate);
-        }
-
-        // Dibujar fondo submarino
-        function drawBackground() {
-            const gradient = ctx.createLinearGradient(0, 0, 0, canvasConfig.height);
-            gradient.addColorStop(0, 'rgba(0, 26, 51, 0.8)');
-            gradient.addColorStop(0.3, 'rgba(0, 61, 102, 0.6)');
-            gradient.addColorStop(0.7, 'rgba(0, 102, 204, 0.4)');
-            gradient.addColorStop(1, 'rgba(0, 133, 255, 0.2)');
-
-            ctx.fillStyle = gradient;
-            ctx.fillRect(0, 0, canvasConfig.width, canvasConfig.height);
-
-            // Efectos de luz submarina
-            drawLightRays();
-        }
-
-        // Rayos de luz submarina
-        function drawLightRays() {
-            ctx.save();
-
-            for (let i = 0; i < 3; i++) {
-                const x = (canvasConfig.width / 4) * (i + 1) + Math.sin(time + i) * 20;
-                const gradient = ctx.createLinearGradient(x, 0, x + 50, canvasConfig.height);
-                gradient.addColorStop(0, 'rgba(127, 219, 255, 0.1)');
-                gradient.addColorStop(0.5, 'rgba(127, 219, 255, 0.05)');
-                gradient.addColorStop(1, 'rgba(127, 219, 255, 0)');
-
-                ctx.fillStyle = gradient;
-                ctx.fillRect(x, 0, 50, canvasConfig.height);
-            }
-
-            ctx.restore();
-        }
-
-        // Dibujar partículas flotantes
-        function drawParticles() {
-            particles.forEach(particle => {
-                // Actualizar posición
-                particle.x += particle.speedX;
-                particle.y += particle.speedY + Math.sin(time + particle.x * 0.01) * 0.2;
-
-                // Rebotar en los bordes
-                if (particle.x < 0 || particle.x > canvasConfig.width) {
-                    particle.speedX *= -1;
-                }
-                if (particle.y < 0 || particle.y > canvasConfig.height) {
-                    particle.speedY *= -1;
-                }
-
-                // Mantener dentro del canvas
-                particle.x = Math.max(0, Math.min(canvasConfig.width, particle.x));
-                particle.y = Math.max(0, Math.min(canvasConfig.height, particle.y));
-
-                // Dibujar partícula
-                ctx.save();
-                ctx.globalAlpha = particle.opacity;
-                ctx.fillStyle = '#7FDBFF';
-                ctx.beginPath();
-                ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.restore();
-            });
-        }
-
-        // Dibujar capas de olas
-        function drawWaveLayers() {
-            const layers = [
-                { color: 'rgba(0, 116, 217, 0.6)', amplitude: 1.0, frequency: 1.0, phase: 0 },
-                { color: 'rgba(57, 204, 204, 0.4)', amplitude: 0.7, frequency: 1.2, phase: Math.PI / 3 },
-                { color: 'rgba(127, 219, 255, 0.3)', amplitude: 0.5, frequency: 0.8, phase: Math.PI / 2 }
-            ];
-
-            layers.forEach((layer, index) => {
-                drawWaveLayer(layer, index);
-            });
-        }
-
-        // Dibujar una capa de olas
-        function drawWaveLayer(layer, layerIndex) {
-            ctx.save();
-            ctx.fillStyle = layer.color;
-            ctx.strokeStyle = layer.color.replace(/[\d.]+\)/, '0.8)');
-            ctx.lineWidth = 2;
-
-            const baseY = canvasConfig.height * 0.3 + layerIndex * 40;
-            const points = [];
-
-            // Calcular puntos de la ola
-            for (let x = 0; x <= canvasConfig.width + 20; x += 5) {
-                const waveHeight = Math.sin(
-                    (x * waveParams.frequency * layer.frequency * 0.01) +
-                    (time * waveParams.speed * 0.5) +
-                    layer.phase
-                ) * waveParams.amplitude * layer.amplitude * 10;
-
-                const y = baseY + waveHeight;
-                points.push({ x, y });
-            }
-
-            // Dibujar la forma de la ola
-            if (points.length > 0) {
-                ctx.beginPath();
-                ctx.moveTo(points[0].x, points[0].y);
-
-                // Usar curvas suaves para conectar los puntos
-                for (let i = 1; i < points.length - 2; i++) {
-                    const cp1x = (points[i].x + points[i + 1].x) / 2;
-                    const cp1y = (points[i].y + points[i + 1].y) / 2;
-                    ctx.quadraticCurveTo(points[i].x, points[i].y, cp1x, cp1y);
-                }
-
-                // Completar la forma para el relleno
-                ctx.lineTo(canvasConfig.width, canvasConfig.height);
-                ctx.lineTo(0, canvasConfig.height);
-                ctx.closePath();
-
-                ctx.fill();
-
-                // Dibujar el contorno de la ola
-                ctx.beginPath();
-                ctx.moveTo(points[0].x, points[0].y);
-                for (let i = 1; i < points.length - 2; i++) {
-                    const cp1x = (points[i].x + points[i + 1].x) / 2;
-                    const cp1y = (points[i].y + points[i + 1].y) / 2;
-                    ctx.quadraticCurveTo(points[i].x, points[i].y, cp1x, cp1y);
-                }
-                ctx.stroke();
-            }
-
-            ctx.restore();
-        }
-
-        // Información de profundidad
-        function drawDepthInfo() {
-            ctx.save();
-            ctx.fillStyle = 'rgba(127, 219, 255, 0.7)';
-            ctx.font = '16px Arial';
-            ctx.textAlign = 'left';
-
-            // Marcadores de profundidad
-            const depths = [10, 20, 30];
-            depths.forEach((depth, index) => {
-                const y = canvasConfig.height * 0.2 + index * 60;
-                ctx.fillText(`${depth}m`, 20, y);
-
-                // Línea de profundidad
-                ctx.save();
-                ctx.strokeStyle = 'rgba(127, 219, 255, 0.3)';
-                ctx.setLineDash([5, 5]);
-                ctx.beginPath();
-                ctx.moveTo(60, y - 5);
-                ctx.lineTo(canvasConfig.width - 20, y - 5);
-                ctx.stroke();
-                ctx.restore();
-            });
-
-            ctx.restore();
-        }
-
-        // Calcular energía cinética
-        function calculateEnergy() {
-            // Fórmula: E = 0.5 × ρ × A² × f × c
-            const energy = 0.5 * waveParams.density *
-                Math.pow(waveParams.amplitude, 2) *
-                waveParams.frequency *
-                waveParams.speed;
-
-            // Actualizar display de energía
-            document.getElementById('energyValue').textContent =
-                Math.round(energy).toLocaleString();
-
-            // Actualizar medidor arpón
-            updateHarpoonMeter(energy);
-        }
-
-        // Actualizar el medidor arpón
-        function updateHarpoonMeter(energy) {
-            const maxEnergy = 25000; // Energía máxima esperada
-            const percentage = Math.min((energy / maxEnergy) * 100, 100);
-
-            // Actualizar posición del arpón
-            const harpoonNeedle = document.getElementById('harpoonNeedle');
-            const maxPosition = harpoonNeedle.parentElement.offsetWidth - 70; // Ancho del arpón
-            const position = (percentage / 100) * maxPosition;
-            harpoonNeedle.style.left = position + 'px';
-
-            // Actualizar glow del fondo
-            const harpoonGlow = document.getElementById('harpoonGlow');
-            harpoonGlow.style.width = percentage + '%';
-
-            // Actualizar nivel de potencia
-            const powerLevel = document.getElementById('powerLevel');
-            let levelText = 'Bajo';
-            let levelColor = '#39CCCC';
-
-            if (percentage >= 75) {
-                levelText = 'MÁXIMO';
-                levelColor = '#FF6B6B';
-            } else if (percentage >= 50) {
-                levelText = 'Alto';
-                levelColor = '#FFD700';
-            } else if (percentage >= 25) {
-                levelText = 'Medio';
-                levelColor = '#7FDBFF';
-            }
-
-            powerLevel.textContent = levelText;
-            powerLevel.style.color = levelColor;
-
-            // Efecto de vibración en niveles altos
-            if (percentage >= 75) {
-                harpoonNeedle.style.animation = 'harpoonVibrate 0.1s infinite';
-            } else {
-                harpoonNeedle.style.animation = 'none';
-            }
-        }
-
-        // Inicializar cuando se carga la página
-        document.addEventListener('DOMContentLoaded', initSimulator);
-
-        // Limpiar animación al cerrar la página
-        window.addEventListener('beforeunload', () => {
-            if (animationId) {
-                cancelAnimationFrame(animationId);
-            }
-        });
-    </script>
+    <script src="main.js"></script>
 </body>
-
 </html>
